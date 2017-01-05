@@ -1,8 +1,11 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 from PIL import Image
 import pytesseract
 import os
 import time
+import ConfigParser
+import tweepy
 
 
 def image_read():
@@ -53,14 +56,35 @@ def ruffier_index(squats_result):
 
 def ruffier_compare(index):
     if index >= 0:
-        return "bardzo dobry"
+        return "bardzo dobra"
     elif index <= 5:
         return "dobra"
     elif index <= 10:
-        return "srednia"
+        return "słaba"
     else:
-        return "suaba"
+        return "bardzo słaba"
 
+
+def status_tweet(status):
+    # Loading config.ini
+    config = ConfigParser.SafeConfigParser()
+    config.read('/home/adam/PycharmProjects/ruffier_test/config.ini')
+
+    # Reading key and token values from config.ini file
+    consumer_key = config.get('KEY', 'consumer_key')
+    consumer_secret = config.get('KEY', 'consumer_secret')
+    access_token = config.get('TOKEN', 'access_token')
+    access_token_secret = config.get('TOKEN', 'access_token_secret')
+
+    # OAuth process, using the keys and tokens
+    auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+    auth.set_access_token(access_token, access_token_secret)
+
+    # Creation of the actual interface, using authentication
+    api = tweepy.API(auth)
+
+    # Sample method, used to update a status
+    api.update_status('Twoja wydolność organizmu jest %s!' % (status))
 
 loaded_image_list = image_read()
 sorted_dictionary = image_sort(loaded_image_list)
@@ -69,3 +93,5 @@ for item in sorted_dictionary:
     extracted_its.append(image_extract(item))
 compared = ruffier_compare(ruffier_index(extracted_its))
 print compared
+status_tweet(compared)
+
